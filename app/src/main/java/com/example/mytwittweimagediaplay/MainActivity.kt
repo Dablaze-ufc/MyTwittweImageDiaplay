@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private val PERMISSION_CODE_WRITE = 10002
     private val PERMISSION_CODE_READ = 10001
     private val REQUEST_CODE = 100
-    private val binding:ActivityMainBinding by lazy {
+    private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
@@ -29,8 +29,8 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.button.setOnClickListener {
-            if (checkPermissionForImage()){
-           openGalleryForImages()
+            if (checkPermissionForImage()) {
+                openGalleryForImages()
             }
         }
     }
@@ -46,8 +46,14 @@ class MainActivity : AppCompatActivity() {
                 val permissionCoarse = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
 
-                requestPermissions(permission, PERMISSION_CODE_READ) // GIVE AN INTEGER VALUE FOR PERMISSION_CODE_READ LIKE 1001
-                requestPermissions(permissionCoarse, PERMISSION_CODE_WRITE) // GIVE AN INTEGER VALUE FOR PERMISSION_CODE_WRITE LIKE 1002
+                requestPermissions(
+                    permission,
+                    PERMISSION_CODE_READ
+                ) // GIVE AN INTEGER VALUE FOR PERMISSION_CODE_READ LIKE 1001
+                requestPermissions(
+                    permissionCoarse,
+                    PERMISSION_CODE_WRITE
+                ) // GIVE AN INTEGER VALUE FOR PERMISSION_CODE_WRITE LIKE 1002
                 isPermitted = false
                 isPermitted
             } else {
@@ -63,23 +69,28 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE && data != null){
+        if (resultCode == Activity.RESULT_OK && requestCode == REQUEST_CODE && data != null) {
             val imageUriList = arrayListOf<Uri>()
-                val count = data.clipData?.itemCount
+            val count = data.clipData?.itemCount
+            //if multiple images are selected this code runs
+            if (count != null) {
 
-                for (i in 0 until count!!) {
+                for (i in 0 until count) {
                     val imageUri: Uri = data.clipData?.getItemAt(i)?.uri!!
                     imageUriList.add(imageUri)
                 }
-            setRecyclerView(imageUriList)
+                setRecyclerView(imageUriList)
+            }
+            // if single image is selected this code runs
+            else if (data.data != null) {
 
-            } else if (data?.data != null) {
-                // if single image is selected
-                //   iv_image.setImageURI(imageUri) Here you can assign the picked image uri to your imageview
-                Timber.d("Something went wrong %s", data.data)
+                imageUriList.add(data.data!!)
+                setRecyclerView(imageUriList)
+
 
             }
         }
+    }
 
     private fun setRecyclerView(imageUriList: ArrayList<Uri>) {
         val adapter = ImagePreviewAdapter()
@@ -97,11 +108,9 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             intent.action = Intent.ACTION_GET_CONTENT
             startActivityForResult(
-                Intent.createChooser(intent, "Choose Pictures")
-                , REQUEST_CODE
+                Intent.createChooser(intent, "Choose Pictures"), REQUEST_CODE
             )
-        }
-        else { // For latest versions API LEVEL 19+
+        } else { // For latest versions API LEVEL 19+
             val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             intent.addCategory(Intent.CATEGORY_OPENABLE)
